@@ -1,0 +1,110 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage{verbatim}
+
+\renewcommand*\thesection{\arabic{section}.}
+\renewcommand*\thesubsection{\thesection\arabic{subsection}}
+
+\title{SOEN 331 Assignment 1: Extended Finite State Machines}
+\date{February 11, 2019}
+\author{Gwendolyne Legate ID: 40077203\\ Daniel Wiktorczyk ID: 40060894 \\Nick Elipoulos ID:\\ Waqar Qureshi ID: 4005526 }
+
+\begin{document}
+\maketitle
+\section{Formal Specifications of Temperature Maintenance System}
+*Note: if current time $\geq$ timeTo or if current time $\leq$ timeFrom, then td == null.\\
+
+$S=(Q, \Sigma_{1}, \Sigma_{2}, q_{0}, \vee, \wedge)$ where\\
+\\
+Q = \{idle, configuration, warming up, system off\}\\
+$\Sigma_{1}=$\{configure, complete configuration, cancel configuration, unexpected shut off, turn on, furnace is on, warming up cycle is done\}\\
+$\Sigma_{2}=$\{turn led light on, turn led light off, single beep, double beep, prolonged beep, click\} \\
+$q_{0}=$\{idle\}\\
+$\vee=\{td:\{\mathbb{R}, null\}, tr:\{\mathbb{R}\}\}$\\
+$\wedge$: Transition Specifications
+\begin{enumerate}
+\item $\rightarrow$ idle
+\item idle $\xrightarrow{configure/\;(single\;beep,\;turn\;led\;light\;off)}$ configuration
+\item configuration $\xrightarrow{complete\;configuration/(double\;beep,\;turn\;led\;light\;off)}$ idle
+\item configuration $\xrightarrow{cancel\;configuration\;or\;after(1minInactivity)/(prolonged\;beep,\;turn\;led\;light\;off)}$ idle
+\item configuration $\xrightarrow{unexpected\;shutoff}$ system off
+\item idle $\xrightarrow{furnace\;is\;on}$ warming up
+\item warming up $\xrightarrow{warming\;up\;cycle\;is\;done/(turn\;furnace\;off,\;click)}$ idle
+\item warming up $\xrightarrow{unexpected\;shut\;off/turn\;furnace\;off}$ system off
+\item warming up $\xrightarrow{configure/(single\;beep,\;turn\;furnace\;off,\;turn\;led\;light\;on}$ configuration
+\item idle $\xrightarrow{shut\;off}$ system off
+\item system off $\xrightarrow{turn\;on}$ idle
+\end{enumerate}
+
+\subsection{Formal Specifications of idle state}
+$S=(Q, \Sigma_{1}, \Sigma_{2}, q_{0}, \vee, \wedge)$ where\\
+Q=\{monitoring, fanning, waiting, exit idle\}\\
+$\Sigma_{1}=$\{after(2min)\} \\
+$\Sigma_{2}=$\{turn furnace on, turn fan off\} \\
+$q_{0}=$\{monitoring\}\\
+$\vee=\{td:\{\mathbb{R}, null\}, tr:\{\mathbb{R}\},\;fan\{on,\;off\}\}$\\
+$\wedge$: Transition Specifications
+\begin{enumerate}
+\item $\rightarrow$ monitoring
+\item monitoring $\xrightarrow{[td == null]/\;turn\;fan\;off}$ monitoring
+\item monitoring$\xrightarrow{[td != null],\;[tr < td-1]/(\;turn\;furnace\;on,\;turn\;fan\;off)}$ exit idle 
+\item monitoring$\xrightarrow{[td != null],\;[tr \geq td-1],\;[fan\;is\;on]}$ fanning 
+\item fanning $\xrightarrow{after(2min)}$ monitoring
+\item monitoring$\xrightarrow{[td != null],\;[tr \geq td-1],\;[fan\;is\;off]}$ waiting
+\item waiting $\xrightarrow{after(2min)}$ monitoring
+
+\end{enumerate}
+
+\subsection{Formal Specifications of configuration state}
+$S=(Q, \Sigma_{1}, q_{0}, \wedge)$ where\\
+Q=\{awaiting timeFrom, awaiting timeTo, awaiting desiredTemperature\}\\
+$\Sigma_{1}=$\{start new entry, set timeForm, set timeTo, set desiredTemperature\} \\
+$q_{0}=$\{awaiting time from\}\\
+$\wedge$: Transition Specifications
+\begin{enumerate}
+\item $\rightarrow$ awaiting time from
+\item awaiting timeFrom $\xrightarrow{set\;timeFrom}$ awaiting timeTo
+\item awaiting timeTo $\xrightarrow{set\;timeTo}$ awaiting desiredTemperature
+\item awaiting desiredTemperature $\xrightarrow{set\;desiredTemperature,\;start\;new\;entry}$ awaiting timeFrom
+\end{enumerate}
+
+\subsection{Formal Specifications of warming up state}
+$S=(Q, \Sigma_{1}, \Sigma_{2}, q_{0}, \vee, \wedge)$ where\\
+\\
+Q = \{coordinating, heating furnace, exit\}\\
+$\Sigma_{1}=$\{after(3 min)\}\\
+$\Sigma_{2}=$\{turn furnace off, turn fan on\}\\
+$q_{0}=$\{coordinating\}\\
+$\vee=\{td:\{\mathbb{R}, null\},\;tf:\{\mathbb{R}l\},\;fan:\{on,\; off\}\}$\\
+$\wedge$: Transition Specifications
+\begin{enumerate}
+\item $\rightarrow$ coordinating
+\item coordinating $\xrightarrow{[td == null]/\;turn\;furnace\;off}$ exit
+\item coordinating $\xrightarrow{[td != null],\;[tf \leq td+1]}$ 
+heating furnace
+\item heating furnace $\xrightarrow{after(3min)}$ coordinating
+\item coordinating $\xrightarrow{[td != null],\;[tf > td+1]/\;turn\;fan\;on}$ exit heating furnace
+\end{enumerate}
+
+\section{UML Diagrams}
+\begin{figure}[hp]
+\caption{UML diagram for the electrical furnace}
+\centering
+\includegraphics[scale=.22]{uml_1.png}
+\end{figure}
+
+\begin{figure}[hp]
+\caption{UML diagrams for idle and configration state}
+\centering
+\includegraphics[scale=.25]{uml_2.png}
+\end{figure}
+
+\begin{figure}[hp]
+\caption{UML diagram for warming up state}
+\centering
+\includegraphics[scale=.3]{uml_3.png}
+\end{figure}
+
+\end{document}
